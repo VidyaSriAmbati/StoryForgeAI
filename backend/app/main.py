@@ -1,22 +1,12 @@
 from fastapi import FastAPI
 
+from backend.app.core.config import settings
+from backend.app.api.router import api_router
+
 app = FastAPI(
-    title="StoryForge AI",
-    version="1.0.0",
-    description="AI-powered storytelling platform"
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description=settings.DESCRIPTION,
 )
 
-
-@app.get("/")
-def home():
-    return {
-        "message": "Welcome to StoryForge AI 🚀",
-        "status": "Running"
-    }
-
-
-@app.get("/health")
-def health():
-    return {
-        "status": "Healthy"
-    }
+app.include_router(api_router)
