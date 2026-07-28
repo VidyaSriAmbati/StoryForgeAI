@@ -5,5 +5,5 @@ from backend.app.api.story import router as story_router
 
 api_router = APIRouter()
 
-api_router.include_router(story_router)
 api_router.include_router(health_router)
+api_router.include_router(story_router)
