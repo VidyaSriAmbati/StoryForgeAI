@@ -1,6 +1,6 @@
 import json
+
 from backend.app.services.story_service import client
-from backend.app.core.config import settings
 
 
 def analyze_story(story: str):
@@ -12,13 +12,13 @@ Analyze the following story.
 Return ONLY valid JSON in this format:
 
 {{
-    "summary":"...",
-    "characters":["...","..."],
-    "scenes":[
+    "summary": "...",
+    "characters": ["...", "..."],
+    "scenes": [
         {{
-            "scene":1,
-            "description":"...",
-            "visual_prompt":"..."
+            "scene": 1,
+            "description": "...",
+            "visual_prompt": "..."
         }}
     ]
 }}
@@ -27,12 +27,14 @@ Story:
 {story}
 """
 
-    response = client.responses.create(
-        model=settings.OPENAI_MODEL,
-        input=prompt,
+    response = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt
     )
 
-    text = response.output_text.strip()
+    text = response.text.strip()
+
+    # Remove Markdown code fences if Gemini adds them
+    text = text.replace("```json", "").replace("```", "").strip()
 
     return json.loads(text)
-    

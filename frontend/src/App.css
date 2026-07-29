@@ -77,3 +77,11 @@ button:disabled {
 .download-btn:hover {
     background: #1d4ed8;
 }
+.characters-list {
+  display: flex;
+  justify-content: center;
+}
+
+.characters-list ul {
+  text-align: left;
+}

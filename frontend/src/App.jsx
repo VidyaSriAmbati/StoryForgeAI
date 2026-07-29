@@ -7,6 +7,10 @@ function App() {
   const [story, setStory] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [analysis, setAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [images, setImages] = useState({});
+const [generatingImage, setGeneratingImage] = useState(null);
 
   const generateStory = async () => {
     if (!prompt.trim()) {
@@ -34,6 +38,56 @@ function App() {
       setLoading(false);
     }
   };
+  const analyzeStory = async () => {
+  if (!story) return;
+
+  setAnalyzing(true);
+
+  try {
+    const response = await axios.post(
+      "http://127.0.0.1:8000/analyze/",
+      {
+        story: story,
+      }
+    );
+
+    setAnalysis(response.data);
+  } catch (error) {
+    console.error(error);
+    alert("Failed to analyze story.");
+  }
+
+  setAnalyzing(false);
+};
+
+const generateImage = async (sceneNumber, prompt) => {
+  setGeneratingImage(sceneNumber);
+
+  try {
+    const response = await axios.post(
+      "http://127.0.0.1:8000/image/generate",
+      {
+        prompt: prompt,
+      }
+    );
+
+    if (response.data.success) {
+      setImages((prev) => ({
+        ...prev,
+        [sceneNumber]: response.data.image,
+      }));
+    } else {
+      alert(
+  `${response.data.provider}: ${response.data.message}`
+);
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Image generation failed.");
+  }
+
+  setGeneratingImage(null);
+};
 
   const copyStory = async () => {
   try {
@@ -85,6 +139,14 @@ const downloadStory = () => {
       >
         {loading ? "Generating Story..." : "Generate Story"}
       </button>
+      <br />
+
+<button
+  onClick={analyzeStory}
+  disabled={!story || analyzing}
+>
+  {analyzing ? "Analyzing..." : "Analyze Story"}
+</button>
 
       {error && <p className="error">{error}</p>}
 
@@ -95,6 +157,80 @@ const downloadStory = () => {
           <div className="story-box">
             {story}
           </div>
+          {analysis && (
+  <>
+    <h2>Story Summary</h2>
+    <div className="story-box">
+      {analysis.summary}
+    </div>
+  </>
+)}
+{analysis && (
+  <>
+    <h2>Characters</h2>
+
+    <div className="characters-list">
+  <ul>
+    {analysis.characters.map((character, index) => (
+      <li key={index}>{character}</li>
+    ))}
+  </ul>
+</div>
+  </>
+)}
+
+{analysis && (
+  <>
+    <h2>Storyboard</h2>
+
+    {analysis.scenes.map((scene) => (
+      <div
+        key={scene.scene}
+        className="story-box"
+        style={{ marginBottom: "20px" }}
+      >
+        <h3>Scene {scene.scene}</h3>
+
+        <p>
+          <strong>Description:</strong>
+        </p>
+
+        <p>{scene.description}</p>
+
+        <p>
+          <strong>Visual Prompt:</strong>
+        </p>
+
+        <p>{scene.visual_prompt}</p>
+        <button
+  onClick={() => navigator.clipboard.writeText(scene.visual_prompt)}
+>
+  📋 Copy Prompt
+</button>
+<button
+  onClick={() =>
+    generateImage(scene.scene, scene.visual_prompt)
+  }
+>
+  {generatingImage === scene.scene
+    ? "Generating..."
+    : "🖼 Generate Image"}
+</button>
+{images[scene.scene] && (
+  <img
+    src={images[scene.scene]}
+    alt={`Scene ${scene.scene}`}
+    style={{
+      width: "100%",
+      marginTop: "20px",
+      borderRadius: "10px",
+    }}
+  />
+)}
+      </div>
+    ))}
+  </>
+)}
 
           <button
   className="copy-btn"
